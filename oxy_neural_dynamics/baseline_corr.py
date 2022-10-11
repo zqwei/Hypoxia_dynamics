@@ -1,4 +1,5 @@
 from utils import *
+from scipy.stats import spearmanr
 
 for ind, row in df.iterrows():
     save_root = row['save_root']
