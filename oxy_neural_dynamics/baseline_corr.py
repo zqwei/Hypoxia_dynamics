@@ -14,23 +14,8 @@ for ind, row in df.iterrows():
     for n_ in range(num_cells):
         if np.isnan(dFF_[n_]).sum()>0:
             valid_F[n_] = False
-    # z_ = brain_map.shape[0]
-    # valid_F = valid_F & (A_center[:, 0]<(z_-1.5)) & (A_center[:, 0]>1.5)
     baseline_ = baseline_[valid_F]
     mean_baseline_ = baseline_.mean(axis=0)
-    
-    # fig, ax1 = plt.subplots()
-    # ax2 = ax1.twinx()
-    # ax1.plot(oxy_, '-k', lw=0.5)
-    # len_ = min(len(locs_cam), len(mean_baseline_))
-    # ax2.plot((locs_cam/6000)[:len_], mean_baseline_[:len_], '-r', lw=2)
-    # ax1.vlines([1200, 2400], ymin=0, ymax=1.0, colors='k', linestyles='--')
-    # ax1.set_xlim([0, 3600])
-    # ax1.set_ylabel('Normalized oxygen level')
-    # ax2.set_ylabel('Baseline F',color="r")
-    # ax1.set_xlabel('Time (s)')
-    # # sns.despine()
-    # plt.show()
     
     num_cells = baseline_.shape[0]
     p_ = np.zeros(num_cells)
