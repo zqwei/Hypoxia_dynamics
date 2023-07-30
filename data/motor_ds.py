@@ -1,0 +1,24 @@
+import pandas as pd
+import numpy as np
+from h5py import File
+df = pd.read_csv('datalist.csv', index_col=0)
+
+
+for ind, row in df.iterrows():
+    if ind<16:
+        continue
+    ephys_ = row['dir_'] + '/ephys/analysis/'
+    save_root = row['save_root']
+    locs_cam = np.load(save_root + 'locs_cam.npy')
+    len_cam = np.unique(np.diff(locs_cam)).min()
+    ephys_data = File(save_root + 'data.mat', 'r')['data']
+    fltCh1 = ephys_data['fltCh2'][()].squeeze()
+    back1 = ephys_data['back2'][()].squeeze()
+    swim_ = (fltCh1-back1)
+    swim_[swim_<0]=0
+    
+    swim_ds = np.zeros(len(locs_cam))
+    for n_ in range(len_cam):
+        swim_ds = swim_ds + swim_[locs_cam-n_]
+    
+    np.save(save_root + 'swim_ds.npy', swim_ds)
