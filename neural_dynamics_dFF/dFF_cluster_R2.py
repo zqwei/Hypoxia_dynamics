@@ -46,7 +46,7 @@ if __name__=='__main__':
         save_root = row['save_root']
         if os.path.exists(save_root + 'FA_R2_ind.npz'):
             continue
-        print(f'Processing {ind} at {save_root}')
+        print(f'Processing {n_row} at {save_root}')
         
         dFF_ = np.load(save_root + 'cell_dff.npz', allow_pickle=True)['dFF'].astype('float16')
         A_center = np.load(save_root+'cell_center.npy')
