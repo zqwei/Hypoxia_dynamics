@@ -14,3 +14,9 @@
 
 ## dFF dynamics
 * **dFF_cluster** : subcluster dFF data
+
+
+## Brain maps across fish
+* **reference_brain** : edit reference brain from cofocal imaging
+* **registration** : registration code from functional imaging to reference
+* **reg_points** : register cells to reference
