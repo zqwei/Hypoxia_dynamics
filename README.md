@@ -11,3 +11,6 @@
 * **baseline_ave** : population mean of postive and negative cells
 * **baseline_clusters** : neural population clustering
 * **baseline_subclusters** : neural subpopulation clustering on neural populations
+
+## dFF dynamics
+* **dFF_cluster** : subcluster dFF data
