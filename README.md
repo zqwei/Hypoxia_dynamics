@@ -6,4 +6,8 @@
 * **motor_ds.py** : downsampled ephys data to frames
 * **seg_data.py** : segmented data
 
-## 
+## Baseline dynamics
+* **baseline_corr** : single neural dynamics correlation with population mean
+* **baseline_ave** : population mean of postive and negative cells
+* **baseline_clusters** : neural population clustering
+* **baseline_subclusters** : neural subpopulation clustering on neural populations
