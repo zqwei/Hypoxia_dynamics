@@ -9,7 +9,7 @@ if __name__=='__main__':
     df = pd.read_csv('../data/datalist.csv', index_col=0)
     
     for n_row, row in df.iterrows():
-        save_root = row['save_root']        
+        save_root = row['save_root']
         if os.path.exists(save_root + 'FA_R3_ind.npz'):
             continue
         print(f'Processing {n_row} at {save_root}')
