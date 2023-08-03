@@ -1,14 +1,18 @@
 import pandas as pd
 import numpy as np
 from h5py import File
+import os
 df = pd.read_csv('datalist.csv', index_col=0)
 
 
 for ind, row in df.iterrows():
-    if ind<16:
-        continue
     ephys_ = row['dir_'] + '/ephys/analysis/'
     save_root = row['save_root']
+    if os.path.exists(save_root + 'swim_ds.npy'):
+        continue
+    if not os.path.exists(save_root + 'data.mat'):
+        print(f'Missing data file at {save_root}')
+        continue
     locs_cam = np.load(save_root + 'locs_cam.npy')
     len_cam = np.unique(np.diff(locs_cam)).min()
     ephys_data = File(save_root + 'data.mat', 'r')['data']

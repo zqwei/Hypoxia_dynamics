@@ -6,13 +6,17 @@ import shutil
 df = pd.read_csv('datalist.csv', index_col=0)
 
 for ind, row in df.iterrows():
-    if ind<16:
-        continue
     ephys_ = row['dir_'] + '/ephys/analysis/'
     save_root = row['save_root']
+    if os.path.exists(save_root + 'locs_cam.npy'):
+        continue
     if not os.path.exists(save_root):
         os.makedirs(save_root)
-    shutil.copyfile(ephys_+'data.mat', save_root+'/data.mat')
+    try:
+        shutil.copyfile(ephys_+'data.mat', save_root+'/data.mat')
+    except:
+        print(f'Missing data file at {save_root}')
+        pass
     shutil.copyfile(ephys_+'x3.mat', save_root+'/x3.mat')
     # shutil.copyfile(ephys_+'locs_cam.mat', save_root+'/locs_cam.mat')
     
