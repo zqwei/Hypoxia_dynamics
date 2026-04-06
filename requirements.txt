@@ -10,5 +10,3 @@ dask
 nibabel
 SimpleITK
 czifile
-fish_proc
-# fish_proc: Ahrens-lab internal package — not on PyPI

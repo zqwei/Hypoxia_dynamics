@@ -1,9 +1,28 @@
 import numpy as np
 from h5py import File
-import fish_proc.wholeBrainDask.cellProcessing_single_WS as fwc
 import dask.array as da
+
+
+def baseline(data, window=100, percentile=15, downsample=10, axis=-1):
+    from scipy.ndimage import percentile_filter
+    from scipy.interpolate import interp1d
+    from numpy import ones
+    size = ones(data.ndim, dtype='int')
+    size[axis] *= window // downsample
+    if downsample == 1:
+        bl = percentile_filter(data, percentile=percentile, size=size)
+    else:
+        slices = [slice(None)] * data.ndim
+        slices[axis] = slice(0, None, downsample)
+        data_ds = data[tuple(slices)].astype('float')
+        baseline_ds = percentile_filter(data_ds, percentile=percentile, size=size)
+        interper = interp1d(range(0, data.shape[axis], downsample), baseline_ds,
+                            axis=axis, fill_value='extrapolate')
+        bl = interper(range(data.shape[axis]))
+    return bl.astype(data.dtype)
 import os
 import pandas as pd
+# df = pd.read_csv('datalist_huc_nodose.csv', index_col=0)
 df = pd.read_csv('datalist.csv', index_col=0)
 
 def cell_loc(cell_id):
@@ -15,7 +34,11 @@ def cell_loc(cell_id):
 
 
 for ind, row in df.iterrows():
+    if ind<38:
+        continue
     dir_ = row['dir_']+'/seg_mika/'
+    if not os.path.exists(dir_):
+        continue
     save_root = row['save_root']
     if os.path.exists(save_root+'cell_center.npy'):
         continue
@@ -40,7 +63,7 @@ for ind, row in df.iterrows():
     F[F<0]=0
     F_dask = da.from_array(F, chunks=('auto', -1))
     win_ = 400
-    baseline_ = da.map_blocks(fwc.baseline, F_dask, dtype='float', window=win_, percentile=20, downsample=10).compute()
+    baseline_ = da.map_blocks(baseline, F_dask, dtype='float', window=win_, percentile=20, downsample=10).compute()
     dFF = F/baseline_-1
 
     brain_shape = V.shape
