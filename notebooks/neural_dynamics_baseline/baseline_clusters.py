@@ -6,11 +6,14 @@ from sklearn.decomposition import PCA
 import os
 from tqdm import tqdm
 df = pd.read_csv('../data/datalist.csv', index_col=0)
+# df = pd.read_csv('../data/datalist_gfap_gc6f.csv', index_col=0)
 pca_ = PCA(n_components=20)
 
 for ind, row in df.iterrows():
     save_root = row['save_root']
     if os.path.exists(save_root+'baseline_clusters.npz'):
+        continue
+    if not os.path.exists(save_root+'cell_dff.npz'):
         continue
     print(f'Processing {ind} at {save_root}')
     dFF_ = np.load(save_root + 'cell_dff.npz', allow_pickle=True)['dFF'].astype('float16')

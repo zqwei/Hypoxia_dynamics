@@ -46,6 +46,9 @@ if __name__=='__main__':
         save_root = row['save_root']
         if os.path.exists(save_root + 'FA_R2_ind.npz'):
             continue
+        if not os.path.exists(save_root + 'FA_R1.pkl'):
+            print(f'No processed data {n_row} at {save_root}')
+            continue
         print(f'Processing {n_row} at {save_root}')
         
         dFF_ = np.load(save_root + 'cell_dff.npz', allow_pickle=True)['dFF'].astype('float16')

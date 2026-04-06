@@ -8,8 +8,7 @@ from tqdm import tqdm
 from scipy.stats import mannwhitneyu
 from scipy.stats import zscore
 from scipy.stats import spearmanr
-from sklearn.decomposition import FactorAnalysis
-from factor_analyzer import Rotator
+import os
 sns.set(style='ticks', font_scale=1.)
 plt.close('all')
 plt.rcParams["figure.figsize"] = (4, 3)

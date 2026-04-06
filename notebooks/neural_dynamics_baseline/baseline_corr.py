@@ -2,6 +2,10 @@ from utils import *
 
 for ind, row in df.iterrows():
     save_root = row['save_root']
+    if os.path.exists(save_root + '/baseline_oxy.npz'):
+        continue
+    if not os.path.exists(save_root + '/cell_dff.npz'):
+        continue
     dFF_ = np.load(save_root + 'cell_dff.npz', allow_pickle=True)['dFF'].astype('float16')
     baseline_ = np.load(save_root + 'cell_dff.npz', allow_pickle=True)['baseline'].astype('float16')
     num_cells = dFF_.shape[0]
