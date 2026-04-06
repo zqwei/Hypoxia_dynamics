@@ -1,32 +1,37 @@
-from utils import *
+import argparse
+import os
+import sys
 
-for ind, row in df.iterrows():
-    save_root = row['save_root']
-    if os.path.exists(save_root + '/baseline_oxy.npz'):
-        continue
-    if not os.path.exists(save_root + '/cell_dff.npz'):
-        continue
-    dFF_ = np.load(save_root + 'cell_dff.npz', allow_pickle=True)['dFF'].astype('float16')
-    baseline_ = np.load(save_root + 'cell_dff.npz', allow_pickle=True)['baseline'].astype('float16')
-    num_cells = dFF_.shape[0]
-    valid_F = np.ones(num_cells).astype('bool')
-    for n_ in range(num_cells):
-        if np.isnan(dFF_[n_]).sum()>0:
-            valid_F[n_] = False
-        if dFF_[n_].max()>10:
-            valid_F[n_] = False
-    baseline_ = baseline_[valid_F]
-    mean_baseline_ = baseline_.mean(axis=0)
-    
-    num_cells = baseline_.shape[0]
-    p_ = np.zeros(num_cells)
-    r_ = np.zeros(num_cells)
-    
-    for n in tqdm(range(num_cells)):
-        r, p = spearmanr(mean_baseline_, baseline_[n])
-        p_[n] = p
-        r_[n] = r
-    
-    np.savez(save_root + '/baseline_oxy.npz', \
-             valid_F=valid_F, mean_baseline_=mean_baseline_, \
-             p_ = p_, r_ = r_)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Compute baseline-to-population correlations for each dataset."
+    )
+    parser.add_argument(
+        "datalist",
+        nargs="?",
+        default="datalist.csv",
+        help="CSV file name under notebooks/data or data.",
+    )
+    parser.add_argument(
+        "--max-index",
+        type=int,
+        default=None,
+        help="Largest dataframe index to process.",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Process all rows in the datalist.",
+    )
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    from src.neural_dynamics_baseline import export_baseline_correlations
+
+    max_index = None if args.all else args.max_index
+    export_baseline_correlations(args.datalist, max_index=max_index)

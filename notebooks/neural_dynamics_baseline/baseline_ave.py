@@ -1,15 +1,37 @@
-from utils import *
+import argparse
+import os
+import sys
 
-for ind, row in df.iterrows():
-    save_root = row['save_root']
-    _ = np.load(save_root + '/baseline_oxy.npz', allow_pickle=True)
-    valid_F = _['valid_F']
-    r_ = _['r_']
-    p_ = _['p_']
-    mean_baseline_ = _['mean_baseline_']
-    baseline_ = np.load(save_root + 'cell_dff.npz', allow_pickle=True)['baseline'].astype('float16')[valid_F]
-    neg_baseline_ = baseline_[r_<-0.1].mean(axis=0)
-    pos_baseline_ = baseline_[r_>0.8].mean(axis=0)
-    
-    np.savez(save_root+'/baseline_oxy_ave.npz', \
-             neg_baseline_=neg_baseline_, pos_baseline_=pos_baseline_)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Average baseline traces for negatively and positively correlated cells."
+    )
+    parser.add_argument(
+        "datalist",
+        nargs="?",
+        default="datalist.csv",
+        help="CSV file name under notebooks/data or data.",
+    )
+    parser.add_argument(
+        "--max-index",
+        type=int,
+        default=None,
+        help="Largest dataframe index to process.",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Process all rows in the datalist.",
+    )
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    from src.neural_dynamics_baseline import export_baseline_averages
+
+    max_index = None if args.all else args.max_index
+    export_baseline_averages(args.datalist, max_index=max_index)
