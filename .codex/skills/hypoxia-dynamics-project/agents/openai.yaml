@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hypoxia Dynamics Project"
+  short_description: "Repo workflow and validation checkpoints"
+  default_prompt: "Use $hypoxia-dynamics-project to refactor, document, and validate changes in this repository."
