@@ -9,6 +9,7 @@ depreciated
 # Data / binary files
 *.mat
 *.csv
+*.nii.gz
 
 # Output figures / documents
 *.pdf
