@@ -1,10 +1,10 @@
-import pandas as pd
-import numpy as np
 import os
-import shutil
-df = pd.read_csv('../../data/datalist_huc_ablation.csv', index_col=0)
+import sys
 
-for ind, row in df.iterrows():
-    ephys_ = row['dir_'] + '/proc_data/'
-    save_root = row['save_root']
-    shutil.copyfile(ephys_+'cell_center_affine_registered.npy', save_root+'/cell_center_affine_registered.npy')
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from src.data import copy_registered_cell_centers
+
+
+if __name__ == "__main__":
+    copy_registered_cell_centers("datalist_huc_ablation.csv")
