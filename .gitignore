@@ -2,6 +2,23 @@
 *.npy
 depreciated
 
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Data / binary files
+*.mat
+*.csv
+
+# Output figures / documents
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.svg
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

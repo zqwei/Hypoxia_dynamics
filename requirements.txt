@@ -1,0 +1,13 @@
+numpy
+pandas
+matplotlib
+scipy
+seaborn
+h5py
+tqdm
+scikit-learn
+dask
+nibabel
+SimpleITK
+czifile
+# fish_proc: Ahrens-lab internal package — not on PyPI
