@@ -6,7 +6,7 @@ import numpy as np
 from h5py import File
 import dask.array as da
 import pandas as pd
-from src.preprocess import baseline, cell_loc
+from src.data.preprocess import baseline, cell_loc
 
 # df = pd.read_csv('../../data/datalist_huc_nodose.csv', index_col=0)
 df = pd.read_csv('../../data/datalist.csv', index_col=0)
