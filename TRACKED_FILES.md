@@ -57,7 +57,7 @@ Mark each file as ✅ Keep | ❌ Remove | ⚠️ Review
 
 ---
 
-## neural_dynamics_baseline/
+## baseline_dynamics/
 
 | File | Status | Notes |
 |------|--------|-------|
