@@ -10,6 +10,15 @@ from .behavior_fit import (
     preload_model_fit_data,
     summarize_model_run_list,
 )
+from .behavior_fit_report import (
+    DEFAULT_CONDITION_ORDER,
+    DEFAULT_SPEC_ORDER,
+    aggregate_per_fish,
+    load_runs_json,
+    plot_models_no_lines,
+    plot_models_with_lines,
+    run_two_way_anova,
+)
 from .load_trvp_data import (
     MATCH_HZ,
     SAMPLE_RATE_HZ,
@@ -37,6 +46,13 @@ __all__ = [
     "fit_one_run_preloaded",
     "format_model_lags",
     "get_data_windowed",
+    "DEFAULT_CONDITION_ORDER",
+    "DEFAULT_SPEC_ORDER",
+    "aggregate_per_fish",
+    "load_runs_json",
+    "plot_models_no_lines",
+    "plot_models_with_lines",
+    "run_two_way_anova",
     "infer_channel_aliases",
     "load_chflt_rawdata",
     "load_drug_timing_table",

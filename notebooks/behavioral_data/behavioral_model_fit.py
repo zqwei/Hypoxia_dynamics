@@ -18,9 +18,15 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from src.behaviors import (  # noqa: E402
+    DEFAULT_CONDITION_ORDER,
+    DEFAULT_SPEC_ORDER,
     fit_model_spec_preloaded,
     format_model_lags,
+    load_runs_json,
+    plot_models_no_lines,
+    plot_models_with_lines,
     preload_model_fit_data,
+    run_two_way_anova,
     summarize_model_run_list,
 )
 
@@ -48,6 +54,15 @@ MODEL_SPECS = [
 ]
 
 RUNS_JSON = Path(__file__).with_name("behavioral_model_fit_runs.json")
+REPORT_PLOTS = True
+REPORT_STATS = True
+PLOT_WITH_LINES = True
+PLOT_NO_LINES = True
+
+PLOT_EV_PATH = Path(__file__).with_name("EV_models.pdf")
+PLOT_AIC_PATH = Path(__file__).with_name("AIC_models.pdf")
+PLOT_EV_NOLINE_PATH = Path(__file__).with_name("EV_models_no_line.pdf")
+PLOT_AIC_NOLINE_PATH = Path(__file__).with_name("AIC_models_no_line.pdf")
 
 
 def model_run_list_to_json(
@@ -120,6 +135,57 @@ def run_behavioral_model_fit() -> pd.DataFrame:
         model_run_list, condition_labels=metrics["condition_labels"]
     )
     RUNS_JSON.write_text(json.dumps(runs_json, indent=2))
+
+    if REPORT_PLOTS or REPORT_STATS:
+        runs_df = load_runs_json(RUNS_JSON)
+
+    if REPORT_PLOTS:
+        if PLOT_WITH_LINES:
+            plot_models_with_lines(
+                runs_df,
+                value_col="r2",
+                output_path=PLOT_EV_PATH,
+                spec_order=DEFAULT_SPEC_ORDER,
+                condition_order=DEFAULT_CONDITION_ORDER,
+                ylim=(0, 0.75),
+            )
+            plot_models_with_lines(
+                runs_df,
+                value_col="aic",
+                output_path=PLOT_AIC_PATH,
+                spec_order=DEFAULT_SPEC_ORDER,
+                condition_order=DEFAULT_CONDITION_ORDER,
+                ylim=(0, 200),
+            )
+        if PLOT_NO_LINES:
+            plot_models_no_lines(
+                runs_df,
+                value_col="r2",
+                output_path=PLOT_EV_NOLINE_PATH,
+                spec_order=DEFAULT_SPEC_ORDER,
+                condition_order=DEFAULT_CONDITION_ORDER,
+                ylim=(0, 0.75),
+            )
+            plot_models_no_lines(
+                runs_df,
+                value_col="aic",
+                output_path=PLOT_AIC_NOLINE_PATH,
+                spec_order=DEFAULT_SPEC_ORDER,
+                condition_order=DEFAULT_CONDITION_ORDER,
+                ylim=(0, 200),
+            )
+
+    if REPORT_STATS:
+        anova_r2 = run_two_way_anova(runs_df, value_col="r2")
+        anova_aic = run_two_way_anova(runs_df, value_col="aic")
+        print("ANOVA r2:")
+        for k, v in anova_r2.items():
+            print("\\n===", k, "===")
+            print(v)
+        print("\\nANOVA AIC:")
+        for k, v in anova_aic.items():
+            print("\\n===", k, "===")
+            print(v)
     return metrics_summary_df
 
 
