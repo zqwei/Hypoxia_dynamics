@@ -10,6 +10,7 @@ depreciated
 *.mat
 *.csv
 *.nii.gz
+notebooks/behavioral_data/behavioral_model_fit_runs.json
 
 # Output figures / documents
 *.pdf
