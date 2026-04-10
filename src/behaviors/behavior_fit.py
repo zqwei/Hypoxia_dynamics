@@ -8,6 +8,7 @@ from h5py import File
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from statsmodels.tools.sm_exceptions import PerfectSeparationWarning
 from tqdm import tqdm
 
 
@@ -237,6 +238,7 @@ def model_o2_swim_flexible(
     include_const: bool = True,
     return_feature_info: bool = False,
     rng: np.random.Generator | None = None,
+    return_warning: bool = False,
 ):
     """Flexible oxygen/swim GLM with per-feature lag control."""
 
@@ -255,8 +257,12 @@ def model_o2_swim_flexible(
     )
 
     if len_ == 0:
+        if return_feature_info and return_warning:
+            return empty_out + (feature_info, False)
         if return_feature_info:
             return empty_out + (feature_info,)
+        if return_warning:
+            return empty_out + (False,)
         return empty_out
 
     for n in range(len_):
@@ -276,13 +282,24 @@ def model_o2_swim_flexible(
     x_list = np.array(x_list)
     idx_y_list = _glm_keep_mask(y_list, rng=rng)
     if x_list.size == 0 or not idx_y_list.any():
+        if return_feature_info and return_warning:
+            return empty_out + (feature_info, False)
         if return_feature_info:
             return empty_out + (feature_info,)
+        if return_warning:
+            return empty_out + (False,)
         return empty_out
-    glm_logit = sm.GLM(
-        y_list[idx_y_list], x_list[idx_y_list], family=sm.families.Binomial()
-    )
-    glm_results = glm_logit.fit(max_iter=1000, tol=1e-6, tol_criterion="params")
+
+    perfect_separation = False
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always", PerfectSeparationWarning)
+        glm_logit = sm.GLM(
+            y_list[idx_y_list], x_list[idx_y_list], family=sm.families.Binomial()
+        )
+        glm_results = glm_logit.fit(max_iter=1000, tol=1e-6, tol_criterion="params")
+        perfect_separation = any(
+            issubclass(w.category, PerfectSeparationWarning) for w in captured
+        )
 
     out = (
         glm_results.llf,
@@ -291,8 +308,12 @@ def model_o2_swim_flexible(
         x_list[idx_y_list].mean(axis=0),
         glm_results.aic,
     )
+    if return_feature_info and return_warning:
+        return out + (feature_info, perfect_separation)
     if return_feature_info:
         return out + (feature_info,)
+    if return_warning:
+        return out + (perfect_separation,)
     return out
 
 
@@ -379,6 +400,7 @@ def fit_one_run_preloaded(
             pre_=pre_bins,
             lags=model_lags,
             rng=rng,
+            return_warning=True,
         )
         models_.append(curr_model)
 
@@ -388,6 +410,7 @@ def fit_one_run_preloaded(
             pre_=pre_bins,
             lags=model_lags,
             rng=rng,
+            return_warning=True,
         )
         models_.append(curr_model)
 
@@ -401,23 +424,37 @@ def fit_many_runs_preloaded(
     model_lags: dict[str, int] | None = None,
     n_jobs: int = 1,
     base_seed: int | None = 0,
+    retry_on_separation: int = 0,
 ) -> list[list[list[tuple]]]:
     if base_seed is None:
         seeds = [None] * n_runs
     else:
         seeds = [base_seed + n_run for n_run in range(n_runs)]
 
+    def has_perfect_separation(run_models: list[list[tuple]]) -> bool:
+        for models_for_fish in run_models:
+            for model_out in models_for_fish:
+                if len(model_out) > 5 and model_out[5]:
+                    return True
+        return False
+
+    def run_with_retry(seed: int | None) -> list[list[tuple]]:
+        attempts = retry_on_separation + 1
+        for attempt in range(attempts):
+            if base_seed is None and attempt > 0:
+                seed = int(np.random.default_rng().integers(0, 2**32 - 1))
+            run_models = fit_one_run_preloaded(
+                preloaded_data, model_lags=model_lags, seed=seed
+            )
+            if not has_perfect_separation(run_models):
+                return run_models
+        return run_models
+
     if n_jobs == 1:
-        return [
-            fit_one_run_preloaded(preloaded_data, model_lags=model_lags, seed=seed)
-            for seed in tqdm(seeds)
-        ]
+        return [run_with_retry(seed) for seed in tqdm(seeds)]
 
     with ThreadPoolExecutor(max_workers=n_jobs) as executor:
-        futures = [
-            executor.submit(fit_one_run_preloaded, preloaded_data, model_lags, seed)
-            for seed in seeds
-        ]
+        futures = [executor.submit(run_with_retry, seed) for seed in seeds]
         return [future.result() for future in tqdm(futures)]
 
 
@@ -427,6 +464,7 @@ def fit_model_spec_preloaded(
     n_runs: int = 20,
     n_jobs: int = 1,
     base_seed: int | None = 0,
+    retry_on_separation: int = 0,
 ) -> dict[str, object]:
     model_lags = _normalize_lags(model_lags).copy()
     runs = fit_many_runs_preloaded(
@@ -435,6 +473,7 @@ def fit_model_spec_preloaded(
         model_lags=model_lags,
         n_jobs=n_jobs,
         base_seed=base_seed,
+        retry_on_separation=retry_on_separation,
     )
     return {
         "model_lags": model_lags,

@@ -38,6 +38,7 @@ POST_S = 30
 N_RUNS = 20
 N_JOBS = 4
 BASE_SEED = None
+RETRY_ON_SEPARATION = 2
 
 MODEL_SPECS = [
     {"o2": 8, "swim": 9},  # full model with both o2 and swim history
@@ -82,6 +83,9 @@ def model_run_list_to_json(
                             "r2": model_out[1],
                             "aic": model_out[4],
                             "params": params,
+                            "perfect_separation": bool(
+                                model_out[5] if len(model_out) > 5 else False
+                            ),
                         }
                     )
     return rows
@@ -105,6 +109,7 @@ def run_behavioral_model_fit() -> pd.DataFrame:
             n_runs=N_RUNS,
             n_jobs=N_JOBS,
             base_seed=BASE_SEED,
+            retry_on_separation=RETRY_ON_SEPARATION,
         )
         for lags in MODEL_SPECS
     ]
