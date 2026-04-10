@@ -1,3 +1,15 @@
+from .behavior_fit import (
+    SAMPLE_RATE_HZ as FIT_SAMPLE_RATE_HZ,
+    bin_arr_1d,
+    fit_many_runs_preloaded,
+    fit_model_spec_preloaded,
+    fit_one_run_preloaded,
+    format_model_lags,
+    get_data_windowed,
+    model_o2_swim_flexible,
+    preload_model_fit_data,
+    summarize_model_run_list,
+)
 from .load_trvp_data import (
     MATCH_HZ,
     SAMPLE_RATE_HZ,
@@ -13,15 +25,25 @@ from .load_trvp_data import (
 )
 
 __all__ = [
+    "FIT_SAMPLE_RATE_HZ",
     "MATCH_HZ",
     "SAMPLE_RATE_HZ",
     "TrvpExampleData",
+    "bin_arr_1d",
     "build_expected_trace",
     "extract_ordered_numeric_field_sequences",
+    "fit_many_runs_preloaded",
+    "fit_model_spec_preloaded",
+    "fit_one_run_preloaded",
+    "format_model_lags",
+    "get_data_windowed",
     "infer_channel_aliases",
     "load_chflt_rawdata",
     "load_drug_timing_table",
     "load_trvp_example",
+    "model_o2_swim_flexible",
     "match_field_to_channel",
     "parse_xml_value",
+    "preload_model_fit_data",
+    "summarize_model_run_list",
 ]
