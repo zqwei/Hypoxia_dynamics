@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import csv
 import shutil
 import subprocess
@@ -194,7 +195,9 @@ def create_archive() -> None:
     subprocess.run(
         [
             "tar",
-            "-czf",
+            "-I",
+            "pigz",
+            "-cf",
             str(ARCHIVE_PATH),
             "-C",
             str(TARGET_ROOT),
@@ -206,8 +209,30 @@ def create_archive() -> None:
     )
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Stage and archive the Figshare export bundle."
+    )
+    parser.add_argument(
+        "--archive-only",
+        action="store_true",
+        help="Rebuild only the archive from an existing staged folder.",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
     TARGET_ROOT.mkdir(parents=True, exist_ok=True)
+
+    if args.archive_only:
+        create_archive()
+        archive_size = ARCHIVE_PATH.stat().st_size
+        print("Archive rebuilt from existing staged folders.")
+        print(f"Archive size bytes: {archive_size}")
+        print(f"Archive path: {ARCHIVE_PATH}")
+        return
+
     reports = build_recording_reports()
     write_readme()
     write_copy_report(reports)
