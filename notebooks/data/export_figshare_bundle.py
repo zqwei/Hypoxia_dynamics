@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -12,6 +13,11 @@ import pandas as pd
 
 TARGET_ROOT = Path("/nrs/ahrens/Ziqiang/Motor_clamp/figshare")
 ARCHIVE_PATH = TARGET_ROOT / "hypoxia_dynamics_figshare_recordings.tar.gz"
+ARCHIVE_INPUTS = [
+    "README.md",
+    "neuronal_recordings",
+    "glial_recordings",
+]
 
 REQUIRED_FILES = [
     (
@@ -189,24 +195,78 @@ def copy_files(reports: list[RecordingReport]) -> None:
         report.copied = True
 
 
+def staged_archive_input_bytes() -> int:
+    total_bytes = 0
+    for relative_path in ARCHIVE_INPUTS:
+        path = TARGET_ROOT / relative_path
+        if path.is_file():
+            total_bytes += path.stat().st_size
+            continue
+        for child in path.rglob("*"):
+            if child.is_file():
+                total_bytes += child.stat().st_size
+    return total_bytes
+
+
 def create_archive() -> None:
+    total_input_bytes = staged_archive_input_bytes()
+    tmp_archive_path = ARCHIVE_PATH.with_name(f"{ARCHIVE_PATH.name}.tmp")
     if ARCHIVE_PATH.exists():
         ARCHIVE_PATH.unlink()
-    subprocess.run(
-        [
-            "tar",
-            "-I",
-            "pigz",
-            "-cf",
-            str(ARCHIVE_PATH),
-            "-C",
-            str(TARGET_ROOT),
-            "README.md",
-            "neuronal_recordings",
-            "glial_recordings",
-        ],
-        check=True,
-    )
+    if tmp_archive_path.exists():
+        tmp_archive_path.unlink()
+
+    tar_cmd = [
+        "tar",
+        "-C",
+        str(TARGET_ROOT),
+        "-cf",
+        "-",
+        *ARCHIVE_INPUTS,
+    ]
+    use_pv = shutil.which("pv") is not None
+
+    with tmp_archive_path.open("wb") as archive_file:
+        tar_proc = subprocess.Popen(tar_cmd, stdout=subprocess.PIPE)
+        if tar_proc.stdout is None:
+            raise RuntimeError("Failed to open tar stdout pipe.")
+
+        prev_stdout = tar_proc.stdout
+        pv_proc = None
+        if use_pv:
+            pv_proc = subprocess.Popen(
+                [
+                    "pv",
+                    "-s",
+                    str(total_input_bytes),
+                ],
+                stdin=prev_stdout,
+                stdout=subprocess.PIPE,
+            )
+            prev_stdout.close()
+            if pv_proc.stdout is None:
+                raise RuntimeError("Failed to open pv stdout pipe.")
+            prev_stdout = pv_proc.stdout
+
+        pigz_proc = subprocess.Popen(
+            ["pigz"],
+            stdin=prev_stdout,
+            stdout=archive_file,
+        )
+        prev_stdout.close()
+
+        pigz_returncode = pigz_proc.wait()
+        tar_returncode = tar_proc.wait()
+        pv_returncode = pv_proc.wait() if pv_proc is not None else 0
+
+    if pigz_returncode != 0:
+        raise subprocess.CalledProcessError(pigz_returncode, ["pigz"])
+    if pv_returncode != 0:
+        raise subprocess.CalledProcessError(pv_returncode, ["pv"])
+    if tar_returncode != 0:
+        raise subprocess.CalledProcessError(tar_returncode, tar_cmd)
+
+    os.replace(tmp_archive_path, ARCHIVE_PATH)
 
 
 def parse_args() -> argparse.Namespace:
