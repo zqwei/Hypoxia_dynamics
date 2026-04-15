@@ -21,7 +21,7 @@ description: Repository-specific workflow for refactoring, documenting, and vali
 ## Current Patterns
 
 - `src/data/pipelines.py` contains reusable raw-data preparation workflows.
-- `src/neural_dynamics_baseline/baseline.py` contains reusable baseline analysis workflows.
+- `src/baseline_dynamics/baseline.py` contains reusable baseline analysis workflows.
 - `notebooks/data/*.py` and `notebooks/baseline_dynamics/*.py` are CLI runners that delegate into `src/`.
 - `notebooks/.../utils.py` may remain as lightweight compatibility helpers, but new shared logic should live in `src/`.
 

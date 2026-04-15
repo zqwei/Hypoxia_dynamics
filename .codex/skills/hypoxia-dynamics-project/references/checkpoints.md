@@ -4,9 +4,10 @@
 
 1. Inspect the target notebook folder and any existing `src` package for overlapping logic.
 2. Move reusable code into `src/` and keep notebook-side `.py` files as thin CLI wrappers.
-3. Preserve existing output filenames, saved artifact names, and default parameters unless the user asks for behavior changes.
-4. Route shared datalist and data-file access through `src/paths.py` instead of hard-coded `../data/...` paths.
-5. Keep plotting-heavy or one-off exploratory code out of `src` unless it clearly becomes reusable.
+3. Keep the package name aligned with the notebook area when it has already been standardized, for example `notebooks/baseline_dynamics -> src/baseline_dynamics`.
+4. Preserve existing output filenames, saved artifact names, and default parameters unless the user asks for behavior changes.
+5. Route shared datalist and data-file access through `src/paths.py` instead of hard-coded `../data/...` paths.
+6. Keep plotting-heavy or one-off exploratory code out of `src` unless it clearly becomes reusable.
 
 ## Validation
 
