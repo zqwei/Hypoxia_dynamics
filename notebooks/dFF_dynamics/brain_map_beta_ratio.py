@@ -14,6 +14,10 @@ DEFAULT_DATALIST = {
     "neuron": "datalist_huc_h2b_gc7f.csv",
     "glia": "datalist_gfap_gc6f.csv",
 }
+DEFAULT_ATLAS = {
+    "neuron": "/nrs/ahrens/Ziqiang/Atlas/atlas.npy",
+    "glia": "/nrs/ahrens/Ziqiang/Motor_clamp/Brain_maps/Glia_Brain_Fused_sliced_DS.npy",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -57,6 +61,12 @@ def parse_args() -> argparse.Namespace:
         help="Map raw beta ratio or log2 ratio.",
     )
     parser.add_argument(
+        "--min-r2-threshold",
+        type=float,
+        default=None,
+        help="Optional minimum min(normoxia_r2, hypoxia_r2) filter per cell.",
+    )
+    parser.add_argument(
         "--radius-z",
         type=int,
         default=5,
@@ -93,7 +103,6 @@ if __name__ == "__main__":
     )
 
     datasets = ["neuron", "glia"] if args.dataset == "all" else [args.dataset]
-    atlas_path = DEFAULT_ATLAS_PATH if args.atlas_path is None else Path(args.atlas_path)
     brain_map_folder = (
         DEFAULT_BRAIN_MAP_FOLDER
         if args.brain_map_folder is None
@@ -101,6 +110,11 @@ if __name__ == "__main__":
     )
 
     for dataset in datasets:
+        atlas_path = (
+            Path(DEFAULT_ATLAS[dataset])
+            if args.atlas_path is None
+            else Path(args.atlas_path)
+        )
         max_index = DEFAULT_MAX_INDEX[dataset] if args.max_index is None else args.max_index
         output_name = f"brain_map_beta_ratio_{dataset}.npz"
         output_path = brain_map_folder / output_name
@@ -112,6 +126,7 @@ if __name__ == "__main__":
             start_index=args.start_index,
             max_index=max_index,
             ratio_mode=args.ratio_mode,
+            min_r2_threshold=args.min_r2_threshold,
             radius_z=args.radius_z,
             radius_y=args.radius_y,
             radius_x=args.radius_x,

@@ -24,6 +24,7 @@ def collect_beta_ratio_cells(
     start_index: int = 0,
     max_index: int | None = None,
     ratio_mode: str = "raw",
+    min_r2_threshold: float | None = None,
 ) -> tuple[np.ndarray, int]:
     df = load_datalist(datalist_name)
     if max_index is None:
@@ -51,6 +52,8 @@ def collect_beta_ratio_cells(
             idx_f = fit_data["idx_F"]
             norm_beta = fit_data["normoxia_beta"].astype(np.float32)
             hyp_beta = fit_data["hypoxia_beta"].astype(np.float32)
+            norm_r2 = fit_data["normoxia_r2"].astype(np.float32)
+            hyp_r2 = fit_data["hypoxia_r2"].astype(np.float32)
             cell_skipped = fit_data["cell_skipped"]
 
         selected_centers = centers[~invalid_][ev_thres][idx_f]
@@ -65,6 +68,13 @@ def collect_beta_ratio_cells(
             & np.isfinite(hyp_beta)
             & (norm_beta > 0)
         )
+        if min_r2_threshold is not None:
+            valid = (
+                valid
+                & np.isfinite(norm_r2)
+                & np.isfinite(hyp_r2)
+                & (np.minimum(norm_r2, hyp_r2) >= min_r2_threshold)
+            )
         if not np.any(valid):
             continue
 
@@ -142,6 +152,7 @@ def export_beta_ratio_brain_map(
     start_index: int = 0,
     max_index: int | None = None,
     ratio_mode: str = "raw",
+    min_r2_threshold: float | None = None,
     radius_z: int = 5,
     radius_y: int = 5,
     radius_x: int = 5,
@@ -153,6 +164,7 @@ def export_beta_ratio_brain_map(
         start_index=start_index,
         max_index=max_index,
         ratio_mode=ratio_mode,
+        min_r2_threshold=min_r2_threshold,
     )
     result = build_beta_ratio_brain_map(
         cell_rows,
@@ -172,6 +184,10 @@ def export_beta_ratio_brain_map(
         cell_rows=cell_rows,
         num_animal=np.asarray(num_animal, dtype=np.int16),
         ratio_mode=np.asarray(ratio_mode),
+        min_r2_threshold=np.asarray(
+            np.nan if min_r2_threshold is None else min_r2_threshold,
+            dtype=np.float32,
+        ),
         min_support=np.asarray(min_support, dtype=np.int16),
         radius=np.asarray([radius_z, radius_y, radius_x], dtype=np.int16),
     )
