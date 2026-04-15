@@ -61,6 +61,12 @@ def parse_args() -> argparse.Namespace:
         help="Map raw beta ratio or log2 ratio.",
     )
     parser.add_argument(
+        "--sign-filter",
+        choices=("all", "positive", "negative"),
+        default="all",
+        help="Keep all cells or only positive/negative beta-ratio cells.",
+    )
+    parser.add_argument(
         "--min-r2-threshold",
         type=float,
         default=None,
@@ -116,7 +122,7 @@ if __name__ == "__main__":
             else Path(args.atlas_path)
         )
         max_index = DEFAULT_MAX_INDEX[dataset] if args.max_index is None else args.max_index
-        output_name = f"brain_map_beta_ratio_{dataset}.npz"
+        output_name = f"brain_map_beta_ratio_{dataset}_{args.ratio_mode}_{args.sign_filter}.npz"
         output_path = brain_map_folder / output_name
         print(f"build {dataset} -> {output_path}")
         export_beta_ratio_brain_map(
@@ -127,6 +133,7 @@ if __name__ == "__main__":
             max_index=max_index,
             ratio_mode=args.ratio_mode,
             min_r2_threshold=args.min_r2_threshold,
+            sign_filter=args.sign_filter,
             radius_z=args.radius_z,
             radius_y=args.radius_y,
             radius_x=args.radius_x,

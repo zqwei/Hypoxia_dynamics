@@ -25,6 +25,7 @@ def collect_beta_ratio_cells(
     max_index: int | None = None,
     ratio_mode: str = "raw",
     min_r2_threshold: float | None = None,
+    sign_filter: str = "all",
 ) -> tuple[np.ndarray, int]:
     df = load_datalist(datalist_name)
     if max_index is None:
@@ -84,11 +85,26 @@ def collect_beta_ratio_cells(
         elif ratio_mode != "raw":
             raise ValueError(f"Unsupported ratio_mode={ratio_mode!r}")
 
+        if sign_filter == "positive":
+            sign_mask = ratio > 0
+        elif sign_filter == "negative":
+            sign_mask = ratio < 0
+        elif sign_filter == "all":
+            sign_mask = np.ones_like(ratio, dtype=bool)
+        else:
+            raise ValueError(f"Unsupported sign_filter={sign_filter!r}")
+
+        if not np.any(sign_mask):
+            continue
+
+        centers_valid = selected_centers[valid][sign_mask]
+        ratio = ratio[sign_mask]
+
         rows.append(
             np.hstack(
                 [
-                    selected_centers[valid].astype(np.float32),
-                    np.full((valid.sum(), 1), num_animal, dtype=np.float32),
+                    centers_valid.astype(np.float32),
+                    np.full((len(ratio), 1), num_animal, dtype=np.float32),
                     ratio[:, None].astype(np.float32),
                 ]
             )
@@ -153,6 +169,7 @@ def export_beta_ratio_brain_map(
     max_index: int | None = None,
     ratio_mode: str = "raw",
     min_r2_threshold: float | None = None,
+    sign_filter: str = "all",
     radius_z: int = 5,
     radius_y: int = 5,
     radius_x: int = 5,
@@ -165,6 +182,7 @@ def export_beta_ratio_brain_map(
         max_index=max_index,
         ratio_mode=ratio_mode,
         min_r2_threshold=min_r2_threshold,
+        sign_filter=sign_filter,
     )
     result = build_beta_ratio_brain_map(
         cell_rows,
@@ -184,6 +202,7 @@ def export_beta_ratio_brain_map(
         cell_rows=cell_rows,
         num_animal=np.asarray(num_animal, dtype=np.int16),
         ratio_mode=np.asarray(ratio_mode),
+        sign_filter=np.asarray(sign_filter),
         min_r2_threshold=np.asarray(
             np.nan if min_r2_threshold is None else min_r2_threshold,
             dtype=np.float32,
