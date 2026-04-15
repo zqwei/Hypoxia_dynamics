@@ -20,8 +20,7 @@
 ## dFF dynamics
 ### Codes
 * **dFF_cluster** : subcluster dFF data
-* **src/dFF_dynamics/calcium_swim_fit.py** : reusable penalized lag-kernel fits for dF/F dynamics from swimming, including kernel estimation, state-wise fitting, and runtime benchmarking
-* **GLM_calcium_swim_fit.py** : notebook-side runner that fits per-cell swim-to-dF/F models for the neuron (`datalist_huc_h2b_gc7f.csv`, rows `0-8`) and glia (`datalist_gfap_gc6f.csv`, rows `0-5`) datasets, using normoxia and hypoxia windows plus a two-period max-Spearman prefilter, and saves `GLM_calcium_swim_fit.npz` into each fish `save_root`
+* **GLM_calcium_swim_fit.py** : penalized lag-kernel fits for dF/F dynamics from swimming, including kernel estimation, state-wise fitting, and runtime benchmarking
 
 ### Relevant figures in the paper
 
