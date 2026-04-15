@@ -31,7 +31,7 @@ def parse_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_args()
-    from src.neural_dynamics_baseline import export_baseline_correlations
+    from src.baseline_dynamics import export_baseline_correlations
 
     max_index = None if args.all else args.max_index
     export_baseline_correlations(args.datalist, max_index=max_index)

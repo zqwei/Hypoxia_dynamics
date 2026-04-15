@@ -36,7 +36,7 @@ def parse_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_args()
-    from src.neural_dynamics_baseline import export_oxygen_clusters
+    from src.baseline_dynamics import export_oxygen_clusters
 
     export_oxygen_clusters(
         args.datalist,

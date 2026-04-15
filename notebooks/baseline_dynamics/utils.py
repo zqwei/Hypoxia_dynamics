@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from src.neural_dynamics_baseline import ecdf, load_baseline_datalist, load_oxygen_mean
+from src.baseline_dynamics import ecdf, load_baseline_datalist, load_oxygen_mean
 
 
 sns.set(style="ticks", font_scale=1.0)
