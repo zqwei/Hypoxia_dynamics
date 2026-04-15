@@ -20,6 +20,7 @@
 ## dFF dynamics
 ### Codes
 * **dFF_cluster** : subcluster dFF data
+* **src/dFF_dynamics/calcium_swim_fit.py** : reusable penalized lag-kernel fits for dF/F dynamics from swimming, including kernel estimation, state-wise fitting, and runtime benchmarking
 
 ### Relevant figures in the paper
 
