@@ -1,3 +1,10 @@
+from .beta_ratio_brain_map import (
+    DEFAULT_ATLAS_PATH,
+    DEFAULT_BRAIN_MAP_FOLDER,
+    build_beta_ratio_brain_map,
+    collect_beta_ratio_cells,
+    export_beta_ratio_brain_map,
+)
 from .calcium_swim_fit import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_LAG_GRID,
@@ -28,6 +35,8 @@ from .calcium_swim_fit import (
 )
 
 __all__ = [
+    "DEFAULT_ATLAS_PATH",
+    "DEFAULT_BRAIN_MAP_FOLDER",
     "DEFAULT_CHUNK_SIZE",
     "DEFAULT_LAG_GRID",
     "DEFAULT_HYPOXIA_WINDOW_S",
@@ -40,9 +49,12 @@ __all__ = [
     "CalciumSwimFitConfig",
     "benchmark_batch_search",
     "benchmark_single_trace_search",
+    "build_beta_ratio_brain_map",
     "build_lag_matrix",
+    "collect_beta_ratio_cells",
     "compute_chunked_spearman_correlations",
     "export_glm_calcium_swim_fit",
+    "export_beta_ratio_brain_map",
     "fit_calcium_swim_fish",
     "fit_calcium_swim_state_cells",
     "fit_calcium_swim_state",
