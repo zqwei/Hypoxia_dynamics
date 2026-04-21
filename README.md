@@ -26,7 +26,6 @@
 * **GLM_calcium_swim_fit.py** : run penalized lag-kernel fits of dF/F dynamics from swimming, including kernel estimation, state-wise fitting, and runtime benchmarking
 * **brain_map_beta_ratio.py** : generate brain maps of swim-calcium modulation ratios from the GLM beta estimates
 * **dFF_d_prime.py** : compute d' for dF/F dynamics
-* **dFF_state_d_prime.py** : compute state-specific d' metrics for dF/F dynamics
 
 ### Relevant figures in the paper
 

@@ -11,6 +11,7 @@ depreciated
 *.csv
 *.nii.gz
 notebooks/behavioral_data/behavioral_model_fit_runs.json
+notebooks/dFF_dynamics/dFF_state_d_prime.py
 
 # Output figures / documents
 *.pdf
