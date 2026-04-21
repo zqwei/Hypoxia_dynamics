@@ -21,8 +21,8 @@
 
 ## dFF dynamics
 ### Codes
-* **dFF_cluster_R1.py / dFF_cluster_R2.py / dFF_cluster_R3.py** : cluster and subcluster dF/F dynamics
-* **dFF_cluster_act.py** : summarize cluster activity traces
+* **dFF_cluster_pipeline.py** : run the staged dF/F clustering pipeline (R1, R2, R3, dynamics, and activity exports)
+* **src/dFF_dynamics/clustering.py** : reusable dF/F clustering functions used by the notebook-side pipeline runner
 * **GLM_calcium_swim_fit.py** : run penalized lag-kernel fits of dF/F dynamics from swimming, including kernel estimation, state-wise fitting, and runtime benchmarking
 * **brain_map_beta_ratio.py** : generate brain maps of swim-calcium modulation ratios from the GLM beta estimates
 * **dFF_d_prime.py** : compute d' for dF/F dynamics

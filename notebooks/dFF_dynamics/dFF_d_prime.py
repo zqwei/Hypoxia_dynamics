@@ -1,6 +1,14 @@
-from utils_cluster_anm import *
-# df = pd.read_csv('../data/datalist_huc_h2b_gc7f.csv', index_col=0)
-df = pd.read_csv('../data/datalist_gfap_gc6f.csv', index_col=0)
+import os
+import sys
+
+import numpy as np
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from src.paths import load_datalist
+
+# df = load_datalist('datalist_huc_h2b_gc7f.csv')
+df = load_datalist('datalist_gfap_gc6f.csv')
 
 # for ind, row in df[:-1].iterrows():\
 for ind, row in df.iterrows():
