@@ -23,6 +23,14 @@
 2. Keep README entries high-signal: scripts, modules, and dataset indexes.
 3. Do not document bulky local data assets file-by-file when they belong to the separate data repo.
 
+## Notebook-Only Backup
+
+1. When the task only changes ignored `*.ipynb` notebooks, record a concise checkpoint instead of attempting an empty Git commit.
+2. Capture the exact notebook paths, the user-facing analysis state, and any manual conventions that would matter on rerun, such as axis swaps, dropped fish, threshold choices, or renamed headers.
+3. Distinguish clearly between tracked code changes and local-only notebook changes so the backup does not imply that Git contains the notebook state.
+4. For notebook-generated CSVs or figures that are part of the working state, note whether they were rewritten directly from the notebook logic or touched manually afterward.
+5. If a notebook export schema was renamed for interpretation, record both the semantic labels and the underlying threshold meaning.
+
 ## Git
 
 1. Stage only the files that belong to the requested task.
