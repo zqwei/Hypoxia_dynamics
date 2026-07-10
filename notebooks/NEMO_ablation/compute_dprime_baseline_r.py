@@ -14,8 +14,8 @@ DEFAULT_DATA_ROOT = Path("/nrs/ahrens/Ziqiang/Motor_clamp/NEMO_ablation")
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Compute pre/post-ablation d-prime and mean dFF differences, plus "
-            "Spearman correlation against the internal oxygen reference."
+            "Compute pre/post-ablation d-prime, dFF and baseline differences, "
+            "normoxia dFF changes, and Spearman correlation against oxygen."
         )
     )
     parser.add_argument(

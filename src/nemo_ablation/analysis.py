@@ -120,18 +120,33 @@ def _mean_diff_and_rank_sum(
     normoxia_mask: np.ndarray,
     hypoxia_mask: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
-    normoxia = traces[:, normoxia_mask].astype(float, copy=False)
-    hypoxia = traces[:, hypoxia_mask].astype(float, copy=False)
-    mean_difference = np.nanmean(hypoxia, axis=1) - np.nanmean(normoxia, axis=1)
+    _, _, mean_difference, p_value = _window_mean_comparison_and_rank_sum(
+        traces,
+        normoxia_mask,
+        hypoxia_mask,
+    )
+    return mean_difference, p_value
+
+
+def _window_mean_comparison_and_rank_sum(
+    traces: np.ndarray,
+    first_mask: np.ndarray,
+    second_mask: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    first = traces[:, first_mask].astype(float, copy=False)
+    second = traces[:, second_mask].astype(float, copy=False)
+    first_mean = np.nanmean(first, axis=1)
+    second_mean = np.nanmean(second, axis=1)
+    mean_difference = second_mean - first_mean
     test_result = mannwhitneyu(
-        hypoxia,
-        normoxia,
+        second,
+        first,
         axis=1,
         alternative="two-sided",
         method="asymptotic",
         nan_policy="omit",
     )
-    return mean_difference, np.asarray(test_result.pvalue)
+    return first_mean, second_mean, mean_difference, np.asarray(test_result.pvalue)
 
 
 def _spearman_against_reference(
@@ -202,6 +217,8 @@ def analyze_ablation_recording(
     d_prime_path = recording_dir / "d_prime_ablation_comparison.npz"
     r_path = recording_dir / "r_ablation_comparison.npz"
     dff_diff_path = recording_dir / "dff_diff_ablation_comparison.npz"
+    baseline_diff_path = recording_dir / "baseline_diff_ablation_comparison.npz"
+    dff_normoxia_path = recording_dir / "dff_normoxia_ablation_comparison.npz"
 
     missing = [path for path in _required_paths(recording_dir, config.use_idx_f) if not path.exists()]
     if missing:
@@ -209,7 +226,17 @@ def analyze_ablation_recording(
     write_d_prime = force or not d_prime_path.exists()
     write_r = force or not r_path.exists()
     write_dff_diff = force or not dff_diff_path.exists()
-    if not any((write_d_prime, write_r, write_dff_diff)):
+    write_baseline_diff = force or not baseline_diff_path.exists()
+    write_dff_normoxia = force or not dff_normoxia_path.exists()
+    if not any(
+        (
+            write_d_prime,
+            write_r,
+            write_dff_diff,
+            write_baseline_diff,
+            write_dff_normoxia,
+        )
+    ):
         return {"status": "skipped_existing", "recording": recording_dir.name}
 
     dff = _open_stored_npz_array(recording_dir / "cell_dff.npz", "dFF")
@@ -274,7 +301,7 @@ def analyze_ablation_recording(
         "post_time_shift_s": np.asarray(config.post_time_shift_s),
     }
 
-    if write_d_prime or write_dff_diff:
+    if write_d_prime or write_dff_diff or write_dff_normoxia:
         print(f"  loading dFF for {output_index.size:,} selected cells", flush=True)
         dff_selected = np.asarray(dff[valid_mask, :num_frames])
 
@@ -333,37 +360,102 @@ def analyze_ablation_recording(
                 post_hypoxia_window_s=np.asarray(config.post_hypoxia_window_s),
                 **common_metadata,
             )
+
+        if write_dff_normoxia:
+            normoxia_mean_1 = np.full(num_cells, np.nan, dtype=float)
+            normoxia_mean_2 = np.full(num_cells, np.nan, dtype=float)
+            normoxia_diff = np.full(num_cells, np.nan, dtype=float)
+            p = np.full(num_cells, np.nan, dtype=float)
+            mean_1_selected, mean_2_selected, diff_selected, p_selected = (
+                _window_mean_comparison_and_rank_sum(
+                    dff_selected,
+                    masks["pre_normoxia"],
+                    masks["post_normoxia"],
+                )
+            )
+            normoxia_mean_1[output_index] = mean_1_selected
+            normoxia_mean_2[output_index] = mean_2_selected
+            normoxia_diff[output_index] = diff_selected
+            p[output_index] = p_selected
+            _atomic_savez(
+                dff_normoxia_path,
+                normoxia_mean_1=normoxia_mean_1,
+                normoxia_mean_2=normoxia_mean_2,
+                normoxia_diff=normoxia_diff,
+                p=p,
+                difference_definition=np.asarray("post_normoxia_minus_pre_normoxia"),
+                source_signal=np.asarray("dFF"),
+                rank_sum_test=np.asarray("mannwhitneyu_two_sided_asymptotic"),
+                pre_normoxia_window_s=np.asarray(config.pre_normoxia_window_s),
+                post_normoxia_window_s=np.asarray(config.post_normoxia_window_s),
+                **common_metadata,
+            )
         del dff_selected
 
-    if write_r:
-        r1 = np.full(num_cells, np.nan, dtype=float)
-        p1 = np.full(num_cells, np.nan, dtype=float)
-        r2 = np.full(num_cells, np.nan, dtype=float)
-        p2 = np.full(num_cells, np.nan, dtype=float)
+    if write_r or write_baseline_diff:
         print(f"  loading baseline for {output_index.size:,} selected cells", flush=True)
         baseline_selected = np.asarray(baseline[valid_mask, :num_frames])
-        r1_selected, p1_selected = _spearman_against_reference(
-            baseline_selected[:, masks["pre_r"]],
-            pre_oxygen,
-        )
-        r2_selected, p2_selected = _spearman_against_reference(
-            baseline_selected[:, masks["post_r"]],
-            post_oxygen,
-        )
-        r1[output_index], p1[output_index] = r1_selected, p1_selected
-        r2[output_index], p2[output_index] = r2_selected, p2_selected
+
+        if write_r:
+            r1 = np.full(num_cells, np.nan, dtype=float)
+            p1 = np.full(num_cells, np.nan, dtype=float)
+            r2 = np.full(num_cells, np.nan, dtype=float)
+            p2 = np.full(num_cells, np.nan, dtype=float)
+            r1_selected, p1_selected = _spearman_against_reference(
+                baseline_selected[:, masks["pre_r"]],
+                pre_oxygen,
+            )
+            r2_selected, p2_selected = _spearman_against_reference(
+                baseline_selected[:, masks["post_r"]],
+                post_oxygen,
+            )
+            r1[output_index], p1[output_index] = r1_selected, p1_selected
+            r2[output_index], p2[output_index] = r2_selected, p2_selected
+            _atomic_savez(
+                r_path,
+                r1=r1,
+                p1=p1,
+                r2=r2,
+                p2=p2,
+                pre_r_window_s=np.asarray(config.pre_r_window_s),
+                post_r_window_s=np.asarray(config.post_r_window_s),
+                oxygen_reference=oxygen_mean,
+                **common_metadata,
+            )
+
+        if write_baseline_diff:
+            diff_1 = np.full(num_cells, np.nan, dtype=float)
+            p_1 = np.full(num_cells, np.nan, dtype=float)
+            diff_2 = np.full(num_cells, np.nan, dtype=float)
+            p_2 = np.full(num_cells, np.nan, dtype=float)
+            diff_1_selected, p_1_selected = _mean_diff_and_rank_sum(
+                baseline_selected,
+                masks["pre_normoxia"],
+                masks["pre_hypoxia"],
+            )
+            diff_2_selected, p_2_selected = _mean_diff_and_rank_sum(
+                baseline_selected,
+                masks["post_normoxia"],
+                masks["post_hypoxia"],
+            )
+            diff_1[output_index], p_1[output_index] = diff_1_selected, p_1_selected
+            diff_2[output_index], p_2[output_index] = diff_2_selected, p_2_selected
+            _atomic_savez(
+                baseline_diff_path,
+                p_1=p_1,
+                diff_1=diff_1,
+                p_2=p_2,
+                diff_2=diff_2,
+                difference_definition=np.asarray("mean_hypoxia_minus_mean_normoxia"),
+                source_signal=np.asarray("baseline"),
+                rank_sum_test=np.asarray("mannwhitneyu_two_sided_asymptotic"),
+                pre_normoxia_window_s=np.asarray(config.pre_normoxia_window_s),
+                pre_hypoxia_window_s=np.asarray(config.pre_hypoxia_window_s),
+                post_normoxia_window_s=np.asarray(config.post_normoxia_window_s),
+                post_hypoxia_window_s=np.asarray(config.post_hypoxia_window_s),
+                **common_metadata,
+            )
         del baseline_selected
-        _atomic_savez(
-            r_path,
-            r1=r1,
-            p1=p1,
-            r2=r2,
-            p2=p2,
-            pre_r_window_s=np.asarray(config.pre_r_window_s),
-            post_r_window_s=np.asarray(config.post_r_window_s),
-            oxygen_reference=oxygen_mean,
-            **common_metadata,
-        )
 
     summary["outputs_written"] = ",".join(
         name
@@ -371,6 +463,14 @@ def analyze_ablation_recording(
             (d_prime_path.name, write_d_prime),
             (r_path.name, write_r),
             (dff_diff_path.name, write_dff_diff),
+            (
+                baseline_diff_path.name,
+                write_baseline_diff,
+            ),
+            (
+                dff_normoxia_path.name,
+                write_dff_normoxia,
+            ),
         )
         if write_output
     )
