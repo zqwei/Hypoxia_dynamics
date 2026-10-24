@@ -7,6 +7,7 @@ depreciated
 .ipynb_checkpoints/
 
 # Data / binary files
+*.pkl
 *.mat
 *.csv
 *.nii.gz
